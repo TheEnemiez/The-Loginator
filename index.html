@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Loginator</title>
+    <style>
+input[type=number],select{width:200px;padding:10px;font-size:16px}input[type=number],table{background-color:#1f1f1f;margin-top:10px}body{font-family:Arial,sans-serif;margin:20px;background-color:#121212;color:#aaa}.dropdown-container{margin-bottom:20px}select{border:1px solid #444;border-radius:5px;background-color:#1f1f1f;color:#eee}.add-button{padding:10px 15px;font-size:16px;background-color:#4caf50;color:#eee;border:none;border-radius:5px;cursor:pointer}.add-button:hover{background-color:#45a049}.table-container{margin-top:20px}table{width:600px;border-collapse:collapse;margin-bottom:10px;color:#eee}td,th{border:1px solid #444;padding:8px;text-align:left}th{background-color:#2c2c2c}.total-row{font-weight:700;background-color:#333;color:#eee}input[type=number]{border:1px solid #444;border-radius:5px;color:#eee}input[type=number]:focus{border-color:#4caf50;outline:0;box-shadow:0 0 5px rgba(76,175,80,.5)}.remove-button{padding:5px 10px;font-size:14px;background-color:#ff4e4e;color:#eee;border:none;border-radius:3px;cursor:pointer;transition:.2s ease-in-out}.remove-button:hover{background-color:#c92525}
+    </style>
+</head>
+
+<body>
+
+    <div class="dropdown-container">
+        <label for="time-selection">Choose a Plan:</label>
+        <select id="time-selection">
+            <option value="150">1 day - 150</option>
+            <option value="1800">15 days - 1800</option>
+            <option value="2800">1 month - 2800</option>
+            <option value="6800">3 months - 6800</option>
+            <option value="11500">6 months - 11500</option>
+            <option value="20000">12 months - 20000</option>
+            <option value="1800">1st slot - 1800</option>
+            <option value="1800">2nd slot - 1800</option>
+            <option value="250">New Locker - 250</option>
+            <option value="150">Renew Locker - 150</option>
+        </select>
+        <div class="dropdown-container">
+            <label for="shift-selection">Shift:</label>
+            <select id="shift-selection">
+                <option value="1st" selected>1st Shift</option>
+                <option value="2nd">2nd Shift</option>
+            </select>
+        </div>
+        <div class="dropdown-container">
+            <input type="checkbox" id="locker-checkbox" disabled>
+            <label for="locker-checkbox">Locker (+250 or +150)</label>
+            <select id="locker-type" disabled>
+                <option value="N">New (+250)</option>
+                <option value="R">Renew (+150)</option>
+            </select>
+        </div>
+
+        <button class="add-button" onclick="addToList()">Add to List</button>
+        <button class="add-button" onclick="copyToClipboard()">Copy to Clipboard</button>
+        <button class="add-button" onclick="exportAsPNG()">Export as PNG</button>
+    </div>
+
+    <div class="table-container" style="display: flex; align-items: flex-start; gap: 25px; ">
+        <table>
+            <thead>
+                <tr>
+                    <th colspan="2" id="shift-header">Today's 1st Shift Admission</th>
+                </tr>
+                <tr>
+                    <th>Plan</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody id="plan-list">
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td>Total</td>
+                    <td id="total-amount">0</td>
+                </tr>
+            </tfoot>
+        </table>
+        <div id="plan-actions" style="display: flex; flex-direction: column; gap: 15px; margin-top: 90px;">
+        </div>
+    </div>
+
+
+
+    <div class="dropdown-container">
+        <label for="cash-type">Select Cash Type:</label>
+        <select id="cash-type">
+        </select>
+    </div>
+    <div class="dropdown-container">
+        <label for="cash-input">Enter Cash Amount:</label>
+        <input type="number" id="cash-input" placeholder="Enter amount">
+    </div>
+    <div class="dropdown-container">
+        <button class="add-button" id="locker-deposit-button" onclick="addLockerDeposit()">Locker Deposit
+            (-100)</button>
+    </div>
+
+    <button class="add-button" onclick="addCash()">Add Cash</button>
+
+    <div class="table-container" style="display: flex; align-items: flex-start; gap: 25px; ">
+        <table id="cash-table">
+            <thead>
+                <tr>
+                    <th>Inventory</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td id="row-1-desc">Yesterday Cash</td>
+                    <td id="row-1-amount">0</td>
+                </tr>
+                <tr>
+                    <td id="row-2-desc">Morning Cash</td>
+                    <td id="row-2-amount">0</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td>Total</td>
+                    <td id="cash-total">0</td>
+                </tr>
+            </tfoot>
+        </table>
+        <div id="cash-actions" style="display: flex; flex-direction: column; gap: 15px; margin-top: 55px;">
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>const planList=document.getElementById("plan-list"),totalAmountElement=document.getElementById("total-amount"),timeDropdown=document.getElementById("time-selection");let totalAmount=0;function exportAsPNG(){let t=document.createElement("div");t.style.position="absolute",t.style.top="-9999px",t.style.left="0",t.style.width="fit-content",t.style.backgroundColor="#121212",t.style.padding="10px";let e=document.querySelector("table").cloneNode(!0);e.style.marginBottom="20px",t.appendChild(e);let n=document.getElementById("cash-table").cloneNode(!0);t.appendChild(n),document.body.appendChild(t),html2canvas(t,{scrollX:0,scrollY:0,width:t.scrollWidth,height:t.scrollHeight}).then(e=>{document.body.removeChild(t),e.toBlob(t=>{navigator.clipboard.write([new ClipboardItem({"image/png":t})]).then(()=>{alert("Both tables exported as PNG and copied to clipboard!")}).catch(t=>{alert("Failed to copy PNG: "+t)})})}).catch(e=>{document.body.removeChild(t),alert("Failed to export PNG: "+e)})}function copyToClipboard(){let t="",e=planList.querySelectorAll("tr");e.forEach(e=>{let n=e.querySelectorAll("td"),o=n[0].textContent.split(" - ")[0].padEnd(20," "),l=n[1].textContent;t+=`${o}${l}
+        `}),t+=`----------------------
+        Total            ${totalAmount}`,navigator.clipboard.writeText(t).then(()=>{alert("Copied to clipboard!")}).catch(t=>{alert("Failed to copy: "+t)})}function addToList(){let t=timeDropdown.options[timeDropdown.selectedIndex],e=t.text.split(" - ")[0],n=parseInt(t.value),o=document.getElementById("locker-checkbox"),l=document.getElementById("locker-type"),a=o.checked;if(a){let i="N"===l.value?250:150;e+=` + locker (${l.value})`,n+=i}let d=planList.querySelectorAll("tr"),r=!1;if(d.forEach(t=>{let o=t.querySelectorAll("td"),l=o[0].textContent.replace(/^\d+x /,"").trim();if(l===e){r=!0;let a=parseInt(o[0].dataset.multiplier)||1;a++,o[0].dataset.multiplier=a,o[0].textContent=`${a>1?`${a}x `:""}${e}`,o[1].textContent=`${a*n}`}}),!r){let s=document.createElement("tr");s.innerHTML=`
+                    <td data-multiplier="1">${e}</td>
+                    <td>${n}</td>
+                `,planList.appendChild(s);let c=document.createElement("button");c.textContent=e,c.className="remove-button",c.dataset.plan=e,c.onclick=()=>removeFromPlanList(e,n),document.getElementById("plan-actions").appendChild(c)}totalAmount+=n,totalAmountElement.textContent=totalAmount}function removeFromPlanList(t,e){let n=planList.querySelectorAll("tr"),o=!1;n.forEach(n=>{let l=n.querySelectorAll("td");if(l.length>0){let a=l[0].textContent.replace(/^\d+x /,"").trim();if(a===t){o=!0;let i=parseInt(l[0].dataset.multiplier)||1;if(i>1)i--,l[0].dataset.multiplier=i,l[0].textContent=`${i>1?`${i}x `:""}${t}`,l[1].textContent=`${i*e}`;else{planList.removeChild(n);let d=document.querySelector(`#plan-actions button[data-plan="${t}"]`);d&&document.getElementById("plan-actions").removeChild(d)}totalAmount-=e,totalAmountElement.textContent=totalAmount}}}),o||console.error(`Plan "${t}" not found in plan-list.`)}function removeFromCashList(t,e){let n=document.querySelectorAll("#cash-table tbody tr"),o=document.getElementById("cash-total"),l=parseInt(o.textContent),a=!1;n.forEach(n=>{let i=n.querySelectorAll("td");if(i.length>0){let d=i[0].textContent.trim();if(d===t){if(a=!0,"Locker Deposit"===t){let r=parseInt(n.dataset.multiplier)||1;r>1?(r--,n.dataset.multiplier=r,i[0].textContent=`${r>1?`${r}x `:""}Locker Deposit`,i[1].textContent=`-${100*r}`):n.parentElement.removeChild(n)}else{let s=parseInt(i[1].textContent);if((s-=e)<=0){i[1].textContent="0";let c=document.querySelector(`#cash-actions button[data-plan="${t}"]`);c&&document.getElementById("cash-actions").removeChild(c)}else i[1].textContent=s}(l-=e)<0&&(l=0),o.textContent=l}}}),a||console.error(`Cash type "${t}" not found in cash-table.`)}function removeLockerDeposit(){let t=document.getElementById("cash-total"),e=document.getElementById("locker-deduction-row"),n=document.getElementById("cash-actions"),o=document.getElementById("locker-remove-button");if(!e)return;let l=e.querySelectorAll("td"),a=parseInt(e.dataset.multiplier)||1;a>1?(a--,e.dataset.multiplier=a,l[0].textContent=`${a>1?`${a}x `:""}Locker Deposit`,l[1].textContent=`-${100*a}`):(e.parentElement.removeChild(e),o&&n.removeChild(o));let i=parseInt(t.textContent);t.textContent=i+100}function addLockerDeposit(){let t=document.getElementById("cash-total"),e=document.querySelector("#cash-table tbody"),n=document.getElementById("cash-actions"),o=document.getElementById("locker-deduction-row");if(o){let l=o.querySelectorAll("td"),a=parseInt(o.dataset.multiplier)||1;a++,o.dataset.multiplier=a,l[0].textContent=`${a>1?`${a}x `:""}Locker Deposit`,l[1].textContent=`-${100*a}`}else{(o=document.createElement("tr")).id="locker-deduction-row",o.dataset.multiplier=1,o.innerHTML=`
+                    <td>Locker Deposit</td>
+                    <td>-100</td>
+                `,e.appendChild(o);let i=document.getElementById("locker-remove-button");i||((i=document.createElement("button")).textContent="Locker Deposit",i.id="locker-remove-button",i.dataset.plan="Locker Deposit",i.classList.add("remove-button"),i.onclick=()=>removeLockerDeposit(),n.appendChild(i))}let d=parseInt(t.textContent);t.textContent=d-100}function addCash(){let t=document.getElementById("cash-input"),e=document.getElementById("cash-type"),n=document.getElementById(e.value),o=document.getElementById("cash-total"),l=parseInt(t.value);if(isNaN(l)||l<=0){alert("Please enter a valid cash amount.");return}let a=parseInt(n.textContent);n.textContent=a+l;let i=parseInt(document.getElementById("row-1-amount").textContent),d=parseInt(document.getElementById("row-2-amount").textContent);o.textContent=i+d;let r=document.getElementById("cash-actions"),s=e.options[e.selectedIndex].text;if(!r.querySelector(`button[data-plan="${s}"]`)){let c=document.createElement("button");c.textContent=s,c.className="remove-button",c.dataset.plan=s,c.onclick=()=>removeFromCashList(s,l),r.appendChild(c)}reorderCashButtons(),t.value=""}function reorderCashButtons(){let t=document.getElementById("cash-actions"),e=document.getElementById("shift-selection"),n="1st"===e.value,o=Array.from(t.querySelectorAll("button")),l=n?["Yesterday Cash","Morning Cash"]:["Morning Cash","Evening Cash"];o.sort((t,e)=>l.indexOf(t.textContent)-l.indexOf(e.textContent)),o.forEach(e=>t.appendChild(e))}document.getElementById("shift-selection").addEventListener("change",function(){let t=document.getElementById("shift-selection"),e=document.getElementById("shift-header"),n=document.getElementById("row-1-desc"),o=document.getElementById("row-2-desc"),l=document.getElementById("cash-type");"1st"===t.value?(e.textContent="Today's 1st Shift Admission",n.textContent="Yesterday Cash",o.textContent="Morning Cash",l.innerHTML=`
+                    <option value="row-1-amount">Yesterday Cash</option>
+                    <option value="row-2-amount">Morning Cash</option>
+                `):(e.textContent="Today's 2nd Shift Admission",n.textContent="Morning Cash",o.textContent="Evening Cash",l.innerHTML=`
+                    <option value="row-1-amount">Morning Cash</option>
+                    <option value="row-2-amount">Evening Cash</option>
+                `)}),planList.addEventListener("click",t=>{let e=planList.querySelectorAll("tr");e.forEach(t=>t.classList.remove("selected")),"TR"===t.target.parentElement.tagName&&t.target.parentElement.classList.add("selected")}),document.addEventListener("DOMContentLoaded",function(){let t=document.getElementById("shift-selection");t.dispatchEvent(new Event("change"))}),timeDropdown.addEventListener("change",()=>{let t=parseInt(timeDropdown.value),e=document.getElementById("locker-checkbox"),n=document.getElementById("locker-type"),o=timeDropdown.options[timeDropdown.selectedIndex].text.split(" - ")[0];t>=2800||o.includes("slot")||"Locker"===o?(e.disabled=!1,n.disabled=!e.checked):(e.disabled=!0,e.checked=!1,n.disabled=!0)});
+    </script>
+</body>
+
+</html>
